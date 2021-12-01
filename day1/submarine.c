@@ -7,7 +7,7 @@ int count(const char* filename){
 	if(ferror(f))return -1;
 
 	while(fscanf(f, "%d", &curr) != EOF){
-		if(ferror(f)) -1;
+		if(ferror(f))return -1;
 		else if(prev != -1 && curr > prev)count++;
 		printf("Curr = %d\n", curr);
 		prev = curr;
