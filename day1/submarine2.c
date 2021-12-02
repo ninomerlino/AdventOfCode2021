@@ -15,6 +15,7 @@ int count(const char* filename){
 		m1 = m2;
 		m2 = m3;
 	}
+	fclose(f);
 	return count;
 }
 

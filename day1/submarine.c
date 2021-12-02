@@ -12,6 +12,7 @@ int count(const char* filename){
 		printf("Curr = %d\n", curr);
 		prev = curr;
 	}
+	fclose(f);
 	return count;
 }
 
