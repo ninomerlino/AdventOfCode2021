@@ -55,10 +55,19 @@ void freeList(List head){
 	}
 }
 
+int convert(const char str[13]){
+	int tot = 0;
+	for (int i = 11; i >= 0; i--)
+		if(str[11 - i] == '1'){//11-i cause the first element of array is the most significant digit
+			tot += (1 << i);// if the one in pos i are more than half of the sample then gamma += 2^i
+		}
+	return tot;
+}
+//for debug
 void PrintList(List head){
 	putchar('[');
 	while(head != NULL){
-		printf("%s", head->value);
+		printf("%d", convert(head->value));
 		if(head->next != NULL){
 			putchar(',');
 		}else{
@@ -77,7 +86,7 @@ char findMostCommon(List head, int off){
 		if(head->value[off] == '1')one++;
 		head = head->next;
 	}
-	if(one > (tot/2))return '1';
+	if(one >= (tot/2))return'1';//if is == to tot/2 will return '1' in the oxigen case which are the one to keep and '1' in the co2 case which is the one to remove
 	return '0';
 }
 
@@ -92,22 +101,14 @@ int size(List head){
 
 List copy(List head){
 	List newHead = newNode(head->value);
+	List curr = newHead;
 	head = head->next;
 	while(head != NULL){
-		newHead->next = newNode(head->value);
+		curr->next = newNode(head->value);
 		head = head->next;
-		newHead = newHead->next;
+		curr = curr->next;
 	}
 	return newHead;
-}
-
-int convert(const char str[13]){
-	int tot = 0;
-	for (int i = 11; i >= 0; i--)
-		if(str[11 - i] == '1'){//11-i cause the first element of array is the most significant digit
-			tot += (1 << i);// if the one in pos i are more than half of the sample then gamma += 2^i
-		}
-	return tot;
 }
 
 int filterForOxigen(List head){
@@ -115,11 +116,12 @@ int filterForOxigen(List head){
 	List curr, tmp, last;
 	int off = 0, out;
 	char mostCommon;
+	//debug info
 	while(size(head) > 1){
 		curr = head;
 		last = NULL;
 		mostCommon = findMostCommon(head, off);
-		//filter head
+		//filter
 		while(curr != NULL){
 			if(curr->value[off] != mostCommon){
 				if(last == NULL){
@@ -151,11 +153,12 @@ int filterForCO2(List head){
 	List curr, tmp, last;
 	int off = 0, out;
 	char mostCommon;
+	//debug info
 	while(size(head) > 1){
 		curr = head;
 		last = NULL;
 		mostCommon = findMostCommon(head, off);
-		//filter head
+		//filter
 		while(curr != NULL){
 			if(curr->value[off] == mostCommon){
 				if(last == NULL){
@@ -185,9 +188,11 @@ int filterForCO2(List head){
 int main(){
 	List values = readFile("input.txt");
 	int oxigen = filterForOxigen(values);
+	printf("O[%d]\n", oxigen);
 	int co2 = filterForCO2(values);
-	printf("Convert %d\n", size(values));
-	printf("Solution is O[%d]*CO2[%d]=%d\n", oxigen, co2, oxigen*co2);
+	printf("Solution is CO2[%d]\n", co2);
+	printf("Solution is [%d]\n", oxigen*co2);
+
 	freeList(values);
 	return 0;
 }
