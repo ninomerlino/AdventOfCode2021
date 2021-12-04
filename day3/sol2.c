@@ -2,8 +2,9 @@
 #include<stdlib.h>
 #include<string.h>
 
+#define BITCOUNT 13
 struct sList{
-	char value[13];
+	char value[BITCOUNT];
 	struct sList* next;
 };
 typedef struct sList* List;
@@ -18,7 +19,7 @@ List newNode(const char* newValue){
 List readFile(const char* filename){
 	FILE* f = fopen(filename, "r");
 	List head = NULL, curr;
-	char value[13];
+	char value[BITCOUNT];
 
 	if(f == NULL){
 		printf("Cannot open file %s\n", filename);
@@ -55,10 +56,10 @@ void freeList(List head){
 	}
 }
 
-int convert(const char str[13]){
+int convert(const char str[BITCOUNT]){
 	int tot = 0;
-	for (int i = 11; i >= 0; i--)
-		if(str[11 - i] == '1'){//11-i cause the first element of array is the most significant digit
+	for (int i = BITCOUNT - 2; i >= 0; i--)
+		if(str[BITCOUNT - i - 2] == '1'){//11-i cause the first element of array is the most significant digit
 			tot += (1 << i);// if the one in pos i are more than half of the sample then gamma += 2^i
 		}
 	return tot;
@@ -67,7 +68,8 @@ int convert(const char str[13]){
 void PrintList(List head){
 	putchar('[');
 	while(head != NULL){
-		printf("%d", convert(head->value));
+		//printf("%d", convert(head->value));
+		printf("%s", head->value);
 		if(head->next != NULL){
 			putchar(',');
 		}else{
@@ -79,14 +81,14 @@ void PrintList(List head){
 }
 
 char findMostCommon(List head, int off){
-	if(off >= 12)raiseError("Offset is too high\n");
-	int tot = 0, one = 0;
+	if(off >= BITCOUNT - 1)raiseError("Offset is too high\n");
+	int zero = 0, one = 0;
 	while(head != NULL){
-		tot++;
 		if(head->value[off] == '1')one++;
+		else zero++;
 		head = head->next;
 	}
-	if(one >= (tot/2))return'1';//if is == to tot/2 will return '1' in the oxigen case which are the one to keep and '1' in the co2 case which is the one to remove
+	if(one >= zero)return'1';//if is == to tot/2 will return '1' in the oxigen case which are the one to keep and '1' in the co2 case which is the one to remove
 	return '0';
 }
 
@@ -158,6 +160,7 @@ int filterForCO2(List head){
 		curr = head;
 		last = NULL;
 		mostCommon = findMostCommon(head, off);
+
 		//filter
 		while(curr != NULL){
 			if(curr->value[off] == mostCommon){

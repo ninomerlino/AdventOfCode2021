@@ -21,17 +21,17 @@ int findGammaEpsilon(const char* filename, int* gamma, int* epsilon){
 		for (int i = 0; i < 12; i++)
 			if(value[i] == '1')
 				onemap[i]++;//check for every bit if is one
-		sampleCount++;
+			else
+				onemap[i]--;
 	}
 	fclose(f);
 	//analazing data
-	sampleCount /= 2;
 	for (int i = 11; i >= 0; i--)
-		if(onemap[11 - i] > sampleCount){//11-i cause the first element of array is the most significant digit
+		if(onemap[11 - i] > 0){//11-i cause the first element of array is the most significant digit
 			*gamma += (1 << i);// if the one in pos i are more than half of the sample then gamma += 2^i
 		}
 	*epsilon = *gamma ^ 4095;
-	printf("Read %d sample found\n\tGamma = %d\n\tEpsilon = %d\n", sampleCount*2, *gamma, *epsilon);
+	printf("Read found\n\tGamma = %d\n\tEpsilon = %d\n", *gamma, *epsilon);
 	return 0;
 }
 
