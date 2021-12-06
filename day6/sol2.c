@@ -1,8 +1,8 @@
 //dr. strangesol or how i learned to optimize and improve my solution
 #include<stdio.h>
 #include<stdlib.h>
-
-typedef unsigned long long School[9];
+typedef fishsize fishsize;
+typedef fishsize School[9];
 
 void raiseError(const char* msg){
     fprintf(stderr ,"%s\n", msg);
@@ -10,7 +10,7 @@ void raiseError(const char* msg){
 }
 
 void nextDay(School s){
-    int new = s[0];
+    fishsize new = s[0];
     for (int i = 0; i < 8; i++)s[i]=s[i+1];
     s[8] = new;
     s[6] += new;
@@ -30,8 +30,8 @@ void getInput(const char* filename, School s){
 	fclose(f);
 }
 
-unsigned long long sumSchool(School s){
-    unsigned long long sum = 0;
+fishsize sumSchool(School s){
+    fishsize sum = 0;
     for (int i = 0; i < 9; i++){
         sum += s[i];
     }
