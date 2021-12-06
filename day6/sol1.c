@@ -89,7 +89,7 @@ void printSchool(School* s){
 int main(){
     School school;
     getInput("input.txt", &school);
-    for (int day = 0; day < 256; day++)
+    for (int day = 0; day < 80; day++)
     {
         nextDay(&school);
         printf("Day %3d there are %6ld fishes now\n", day+1, school.size);
