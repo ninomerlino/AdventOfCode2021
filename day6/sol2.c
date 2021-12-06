@@ -1,7 +1,9 @@
 //dr. strangesol or how i learned to optimize and improve my solution
 #include<stdio.h>
 #include<stdlib.h>
-typedef fishsize fishsize;
+#include<stdint.h>
+
+typedef uint64_t  fishsize;
 typedef fishsize School[9];
 
 void raiseError(const char* msg){
