@@ -43,13 +43,20 @@ void getInput(const char* filename, int** pos, size_t *pos_size, int *max, int *
 	fclose(f);
 }
 
+int Σ(int x){
+    int sum = 0;
+    for (int i = 0; i <= x; i++)
+        sum+=i;
+    return sum;
+}
+
 int calculateFuelCompsumption(int* c, size_t s, int p){
     int sum = 0, dif;
     for (size_t i = 0; i < s; i++)
     {
         dif = p - c[i];
         if(dif < 0)dif *= -1;
-        sum += dif;
+        sum += Σ(dif);
     }
     return sum;
 }
