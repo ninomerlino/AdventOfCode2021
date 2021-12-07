@@ -13,7 +13,7 @@ void raiseError(const char* msg){
 void getInput(const char* filename, int** pos, size_t *pos_size, int *max, int *min){
 	FILE* f = fopen(filename, "r");
     int* crabs;
-    size_t size;
+    size_t size = 0;
     int tmp;
     char poopy;
     *max = 0;
