@@ -47,8 +47,8 @@ int interpretSignal(StrSignal str, Connection con){
     }
     if(realSignal[a] && realSignal[b] && realSignal[f] && realSignal[g]){
         if(realSignal[c] && realSignal[d] && realSignal[e])return 8;
-        if(realSignal[c] && realSignal[e])return 0;
         if(realSignal[c] && realSignal[d])return 9;
+        if(realSignal[c] && realSignal[e])return 0;
         if(realSignal[d] && realSignal[e])return 6;
         if(realSignal[d])return 5;
     }
@@ -161,7 +161,7 @@ int readfile(const char* filename){
 }
 
 int main(){
-    int sol = readfile("input.txt");
+    int sol = readfile("test2.txt");
     printf("Solution = %d\n", sol);
     return 0;
 }

@@ -2,3 +2,6 @@
 .vscode/
 sol2
 sol1
+day8/signal.c
+test.c
+*.ignore
