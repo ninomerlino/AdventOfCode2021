@@ -1,9 +1,9 @@
-use std::{
-    collections::{HashMap, HashSet},
-    hash::Hash,
-};
 use ahash::RandomState as ARandomState;
 use regex::Regex;
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    hash::Hash,
+};
 
 struct ReduceState {
     sum: u64,
@@ -112,17 +112,17 @@ pub fn p4(input: &str) -> u64 {
     total_power as u64
 }
 
-#[derive(Debug,Default,PartialEq,Eq,Clone, Copy)]
-struct Pos(i64,i64);
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
+struct Pos(i64, i64);
 
 impl Hash for Pos {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        state.write_i64(self.1 + self.0*140)
+        state.write_i64(self.1 + self.0 * 140)
     }
 }
 
-fn generate_valid_positions(input: &str) -> HashSet<Pos,ARandomState> {
-    let mut valid_positions: HashSet<Pos,ARandomState> = HashSet::default();
+fn generate_valid_positions(input: &str) -> HashSet<Pos, ARandomState> {
+    let mut valid_positions: HashSet<Pos, ARandomState> = HashSet::default();
     for (row, line) in input.lines().enumerate() {
         let row = row as i64;
         for (col, val) in line.chars().enumerate() {
@@ -139,8 +139,6 @@ fn generate_valid_positions(input: &str) -> HashSet<Pos,ARandomState> {
     }
     valid_positions
 }
-
-
 
 #[aoc(day3, part1, merlino)]
 pub fn p5(input: &str) -> u64 {
@@ -228,11 +226,114 @@ pub fn p6(input: &str) -> u64 {
         buffer.clear();
     }
 
-    gear_friends.values().filter_map(|v| {
-        if v.len() == 2 {
-            Some(v[0] * v[1])
-        } else {
-            None
+    gear_friends
+        .values()
+        .filter_map(|v| {
+            if v.len() == 2 {
+                Some(v[0] * v[1])
+            } else {
+                None
+            }
+        })
+        .sum()
+}
+
+enum P7State {
+    Start,
+    WinningNumbers,
+    NormalNumbers,
+}
+
+#[derive(Debug, Clone, Default)]
+struct Deck {
+    id: usize,
+    winning_numbers: HashSet<u64, ARandomState>,
+    numbers: Vec<u64>,
+}
+
+impl Deck {
+    fn new(id: usize, line: &str) -> Self {
+        let mut numbers: Vec<u64> = Vec::default();
+        let mut winning_numbers: HashSet<u64, ARandomState> = HashSet::default();
+        let mut state = P7State::Start;
+
+        for word in line.split_whitespace() {
+            match state {
+                P7State::Start => {
+                    if word.contains(":") {
+                        state = P7State::WinningNumbers;
+                    }
+                }
+                P7State::WinningNumbers => {
+                    if word == "|" {
+                        state = P7State::NormalNumbers;
+                    } else {
+                        winning_numbers.insert(word.parse().unwrap());
+                    }
+                }
+                P7State::NormalNumbers => {
+                    numbers.push(word.parse().unwrap());
+                }
+            }
         }
-    }).sum()
+
+        Self {
+            id,
+            winning_numbers,
+            numbers,
+        }
+    }
+
+    fn points(&self) -> u64 {
+        self.numbers
+            .iter()
+            .filter_map(|n| {
+                if self.winning_numbers.contains(n) {
+                    Some(1_u64)
+                } else {
+                    None
+                }
+            })
+            .reduce(|acc, _| acc * 2)
+            .unwrap_or(0)
+    }
+
+    fn pairs(&self) -> usize {
+        self.numbers
+            .iter()
+            .filter(|&n| self.winning_numbers.contains(n))
+            .count()
+    }
+}
+
+#[aoc_generator(day4)]
+pub fn g7(input: &str) -> Vec<Deck> {
+    input
+        .lines()
+        .enumerate()
+        .map(|(id, l)| Deck::new(id, l))
+        .collect()
+}
+
+#[aoc(day4, part1)]
+pub fn p7(input: &Vec<Deck>) -> u64 {
+    input.iter().map(|d| d.points()).sum()
+}
+
+#[aoc(day4, part2)]
+pub fn p8(input: &Vec<Deck>) -> u64 {
+    let mut mult_values: HashMap<usize, u64, ARandomState> = HashMap::default();
+    let mut total = 0;
+    for deck in input {
+        let mult = mult_values.get(&deck.id).copied().unwrap_or(1);
+        let pairs = deck.pairs();
+        for target_id in (deck.id + 1)..=(deck.id + pairs) {
+            mult_values
+                .entry(target_id)
+                .and_modify(|x| *x += mult)
+                .or_insert(mult + 1);
+        }
+        total += mult;
+    }
+    total
 }
