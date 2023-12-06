@@ -3,6 +3,7 @@ use regex::Regex;
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     hash::Hash,
+    ops::{Range, RangeInclusive},
 };
 
 struct ReduceState {
@@ -113,7 +114,7 @@ pub fn p4(input: &str) -> u64 {
 }
 
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
-struct Pos(i64, i64);
+pub struct Pos(i64, i64);
 
 impl Hash for Pos {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
@@ -121,7 +122,8 @@ impl Hash for Pos {
     }
 }
 
-fn generate_valid_positions(input: &str) -> HashSet<Pos, ARandomState> {
+#[aoc_generator(day3,part1)]
+pub fn g5(input: &str) -> (String, HashSet<Pos, ARandomState>){
     let mut valid_positions: HashSet<Pos, ARandomState> = HashSet::default();
     for (row, line) in input.lines().enumerate() {
         let row = row as i64;
@@ -137,18 +139,36 @@ fn generate_valid_positions(input: &str) -> HashSet<Pos, ARandomState> {
             }
         }
     }
-    valid_positions
+    (input.to_owned(), valid_positions)
 }
 
-#[aoc(day3, part1, merlino)]
-pub fn p5(input: &str) -> u64 {
-    let valid_positions = generate_valid_positions(input);
+#[aoc_generator(day3,part2)]
+pub fn g6(input: &str) -> (String, HashMap<Pos, Pos, ARandomState>){
+    let mut valid_positions: HashMap<Pos, Pos, ARandomState> = HashMap::default();
+    for (row, line) in input.lines().enumerate() {
+        let row = row as i64;
+        for (col, val) in line.chars().enumerate() {
+            let col = col as i64;
+            if val == '*' {
+                for new_row in (row - 1)..=(row + 1) {
+                    for new_col in (col - 1)..=(col + 1) {
+                        valid_positions.insert(Pos(new_row, new_col), Pos(row, col));
+                    }
+                }
+            }
+        }
+    }
+    (input.to_owned(), valid_positions)
+}
+
+#[aoc(day3, part1)]
+pub fn p5((text, valid_positions): &(String, HashSet<Pos, ARandomState>)) -> u64 {
 
     let mut sum = 0;
     let mut is_valid = false;
     let mut buffer = String::default();
 
-    for (row, line) in input.lines().enumerate() {
+    for (row, line) in text.lines().enumerate() {
         for (col, val) in line.chars().enumerate() {
             if val.is_ascii_digit() {
                 buffer.push(val);
@@ -170,28 +190,8 @@ pub fn p5(input: &str) -> u64 {
     sum
 }
 
-fn generate_gear_positions(input: &str) -> HashMap<Pos, Pos, ARandomState> {
-    let mut valid_positions: HashMap<Pos, Pos, ARandomState> = HashMap::default();
-    for (row, line) in input.lines().enumerate() {
-        let row = row as i64;
-        for (col, val) in line.chars().enumerate() {
-            let col = col as i64;
-            if val == '*' {
-                for new_row in (row - 1)..=(row + 1) {
-                    for new_col in (col - 1)..=(col + 1) {
-                        valid_positions.insert(Pos(new_row, new_col), Pos(row, col));
-                    }
-                }
-            }
-        }
-    }
-    valid_positions
-}
-
-#[aoc(day3, part2, merlino)]
-pub fn p6(input: &str) -> u64 {
-    let gear_positions = generate_gear_positions(input);
-
+#[aoc(day3, part2)]
+pub fn p6((input, gear_positions): &(String, HashMap<Pos, Pos, ARandomState>)) -> u64 {
     let mut gear_friends: HashMap<Pos, Vec<u64>, ARandomState> = HashMap::default();
     let mut close_gears: HashSet<Pos, ARandomState> = HashSet::default();
     let mut buffer = String::default();
@@ -245,7 +245,7 @@ enum P7State {
 }
 
 #[derive(Debug, Clone, Default)]
-struct Deck {
+pub struct Deck {
     id: usize,
     winning_numbers: HashSet<u64, ARandomState>,
     numbers: Vec<u64>,
@@ -336,4 +336,65 @@ pub fn p8(input: &Vec<Deck>) -> u64 {
         total += mult;
     }
     total
+}
+
+#[aoc(day5, part1)]
+pub fn p9(input: &str) -> u64 {
+    todo!() /* day 5 boring as hell */
+}
+
+#[aoc(day5, part2)]
+pub fn p10(input: &str) -> u64 {
+    todo!()
+}
+
+#[derive(Debug)]
+pub struct Race {
+    total_time: u64,
+    min_winning_distance: u64,
+}
+
+impl Race {
+    pub fn get_winning_strats_count(&self) -> u64 {
+        let delta = ((self.total_time.pow(2) - 4 * self.min_winning_distance) as f64).sqrt();
+        let min = (self.total_time as f64 - delta) / 2.0;
+        let max = (self.total_time as f64 + delta) / 2.0;
+        (max.floor() - min.ceil() + 1.0) as u64
+    }
+}
+
+#[aoc_generator(day6,part1)]
+pub fn g11(input: &str) -> Vec<Race> {
+    let mut lines = input.lines().map(|l| l.split_whitespace());
+    let mut races = lines.next().unwrap().zip(lines.next().unwrap());
+    races.next(); //skip labels
+    races
+        .map(|(time, distance)| Race {
+            total_time: time.parse().unwrap(),
+            min_winning_distance: distance.parse::<u64>().unwrap() + 1,
+        })
+        .collect()
+}
+
+#[aoc_generator(day6,part2)]
+pub fn g12(input: &str) -> Race {
+    let mut lines = input.lines().map(|l| l.split_whitespace());
+    let mut time = lines.next().unwrap();
+    let mut distance = lines.next().unwrap();
+    time.next(); //skip labels
+    distance.next();
+    Race{
+        total_time: time.collect::<String>().parse().unwrap(),
+        min_winning_distance: distance.collect::<String>().parse::<u64>().unwrap() + 1
+    }
+}
+
+#[aoc(day6, part1)]
+pub fn p11(input: &Vec<Race>) -> u64 {
+    input.iter().map(|r|r.get_winning_strats_count()).reduce(|acc,n|acc*n).unwrap()
+}
+
+#[aoc(day6, part2)]
+pub fn p12(input: &Race) -> u64 {
+    input.get_winning_strats_count()
 }

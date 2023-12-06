@@ -1,4 +1,4 @@
-use crate::days::p3;
+use crate::days::{p3,g11};
 
 #[test]
 fn test_d2_p1(){
@@ -9,4 +9,13 @@ Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
 Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green"#;
 	let value = p3(input);
 	assert_eq!(value, 8);
+}
+
+#[test]
+fn test_d6_p1(){
+	let input = r#"Time:      7  15   30
+Distance:  9  40  200"#;
+	let input = g11(input);
+	let strats: Vec<u64> = input.iter().map(|r|r.get_winning_strats_count()).collect();
+	dbg!(strats);
 }
