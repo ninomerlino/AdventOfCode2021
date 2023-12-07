@@ -338,7 +338,7 @@ pub fn p8(input: &Vec<Deck>) -> u64 {
     total
 }
 
-#[aoc(day5, part1)]
+/*#[aoc(day5, part1)]
 pub fn p9(input: &str) -> u64 {
     todo!() /* day 5 boring as hell */
 }
@@ -346,7 +346,7 @@ pub fn p9(input: &str) -> u64 {
 #[aoc(day5, part2)]
 pub fn p10(input: &str) -> u64 {
     todo!()
-}
+}*/
 
 #[derive(Debug)]
 pub struct Race {
