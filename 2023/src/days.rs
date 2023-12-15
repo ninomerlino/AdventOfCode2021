@@ -1,6 +1,7 @@
 use ahash::RandomState as ARandomState;
 use regex::Regex;
 use std::{
+    cmp::Ordering,
     collections::{HashMap, HashSet, VecDeque},
     hash::Hash,
     ops::{Range, RangeInclusive},
@@ -122,8 +123,8 @@ impl Hash for Pos {
     }
 }
 
-#[aoc_generator(day3,part1)]
-pub fn g5(input: &str) -> (String, HashSet<Pos, ARandomState>){
+#[aoc_generator(day3, part1)]
+pub fn g5(input: &str) -> (String, HashSet<Pos, ARandomState>) {
     let mut valid_positions: HashSet<Pos, ARandomState> = HashSet::default();
     for (row, line) in input.lines().enumerate() {
         let row = row as i64;
@@ -142,8 +143,8 @@ pub fn g5(input: &str) -> (String, HashSet<Pos, ARandomState>){
     (input.to_owned(), valid_positions)
 }
 
-#[aoc_generator(day3,part2)]
-pub fn g6(input: &str) -> (String, HashMap<Pos, Pos, ARandomState>){
+#[aoc_generator(day3, part2)]
+pub fn g6(input: &str) -> (String, HashMap<Pos, Pos, ARandomState>) {
     let mut valid_positions: HashMap<Pos, Pos, ARandomState> = HashMap::default();
     for (row, line) in input.lines().enumerate() {
         let row = row as i64;
@@ -163,7 +164,6 @@ pub fn g6(input: &str) -> (String, HashMap<Pos, Pos, ARandomState>){
 
 #[aoc(day3, part1)]
 pub fn p5((text, valid_positions): &(String, HashSet<Pos, ARandomState>)) -> u64 {
-
     let mut sum = 0;
     let mut is_valid = false;
     let mut buffer = String::default();
@@ -363,7 +363,7 @@ impl Race {
     }
 }
 
-#[aoc_generator(day6,part1)]
+#[aoc_generator(day6, part1)]
 pub fn g11(input: &str) -> Vec<Race> {
     let mut lines = input.lines().map(|l| l.split_whitespace());
     let mut races = lines.next().unwrap().zip(lines.next().unwrap());
@@ -376,25 +376,295 @@ pub fn g11(input: &str) -> Vec<Race> {
         .collect()
 }
 
-#[aoc_generator(day6,part2)]
+#[aoc_generator(day6, part2)]
 pub fn g12(input: &str) -> Race {
     let mut lines = input.lines().map(|l| l.split_whitespace());
     let mut time = lines.next().unwrap();
     let mut distance = lines.next().unwrap();
     time.next(); //skip labels
     distance.next();
-    Race{
+    Race {
         total_time: time.collect::<String>().parse().unwrap(),
-        min_winning_distance: distance.collect::<String>().parse::<u64>().unwrap() + 1
+        min_winning_distance: distance.collect::<String>().parse::<u64>().unwrap() + 1,
     }
 }
 
 #[aoc(day6, part1)]
 pub fn p11(input: &Vec<Race>) -> u64 {
-    input.iter().map(|r|r.get_winning_strats_count()).reduce(|acc,n|acc*n).unwrap()
+    input
+        .iter()
+        .map(|r| r.get_winning_strats_count())
+        .reduce(|acc, n| acc * n)
+        .unwrap()
 }
 
 #[aoc(day6, part2)]
 pub fn p12(input: &Race) -> u64 {
     input.get_winning_strats_count()
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+pub enum HandScore {
+    HighCard,
+    OnePair,
+    TwoPair,
+    ThreeOfAKind,
+    FullHouse,
+    FourOfAKind,
+    FiveOfAKind,
+}
+
+impl HandScore {
+    pub fn new(card_freq: &[u8; 13]) -> HandScore {
+        let mut max = 0;
+        let mut pair_count = 0;
+        for freq in card_freq {
+            max = max.max(*freq);
+            if *freq == 2 {
+                pair_count += 1;
+            }
+        }
+
+        match (max, pair_count) {
+            (5, _) => HandScore::FiveOfAKind,
+            (4, _) => HandScore::FourOfAKind,
+            (3, 1) => HandScore::FullHouse,
+            (3, 0) => HandScore::ThreeOfAKind,
+            (2, 2) => HandScore::TwoPair,
+            (2, 1) => HandScore::OnePair,
+            (1, 0) => HandScore::HighCard,
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn new_joker(card_freq: &[u8; 13]) -> HandScore {
+        let mut max = 0;
+        let mut pair_count = 0;
+        let jokers = card_freq[0];
+        for freq in card_freq {
+            max = max.max(*freq);
+            if *freq == 2 {
+                pair_count += 1;
+            }
+        }
+        match (max, pair_count, jokers) {
+            (5, _, _) => HandScore::FiveOfAKind,
+            (4, 0, 4) => HandScore::FiveOfAKind,
+            (4, _, 1) => HandScore::FiveOfAKind,
+            (4, _, 0) => HandScore::FourOfAKind,
+            (3, 1, 3) => HandScore::FiveOfAKind,
+            (3, 1, 2) => HandScore::FiveOfAKind,
+            (3, 1, 0) => HandScore::FullHouse,
+            (3, 0, 3) => HandScore::FourOfAKind,
+            (3, 0, 1) => HandScore::FourOfAKind,
+            (3, 0, 0) => HandScore::ThreeOfAKind,
+            (2, 2, 2) => HandScore::FourOfAKind,
+            (2, 2, 1) => HandScore::FullHouse,
+            (2, 2, 0) => HandScore::TwoPair,
+            (2, 1, 2) => HandScore::ThreeOfAKind,
+            (2, 1, 1) => HandScore::ThreeOfAKind,
+            (2, 1, 0) => HandScore::OnePair,
+            (1, 0, 1) => HandScore::OnePair,
+            (1, 0, 0) => HandScore::HighCard,
+            x => {
+                unreachable!()
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Hand {
+    raw: String,
+    bid: u64,
+    score: HandScore,
+}
+
+impl Hand {
+    #[inline]
+    fn card_index(c: char) -> usize {
+        match c {
+            '2' => 0,
+            '3' => 1,
+            '4' => 2,
+            '5' => 3,
+            '6' => 4,
+            '7' => 5,
+            '8' => 6,
+            '9' => 7,
+            'T' => 8,
+            'J' => 9,
+            'Q' => 10,
+            'K' => 11,
+            'A' => 12,
+            _ => unreachable!(),
+        }
+    }
+
+    fn card_index_joker(c: char) -> usize {
+        match c {
+            'J' => 0,
+            '2' => 1,
+            '3' => 2,
+            '4' => 3,
+            '5' => 4,
+            '6' => 5,
+            '7' => 6,
+            '8' => 7,
+            '9' => 8,
+            'T' => 9,
+            'Q' => 10,
+            'K' => 11,
+            'A' => 12,
+            _ => unreachable!(),
+        }
+    }
+
+    pub fn new(line: &str) -> Self {
+        let (cards, bid) = line.split_once(' ').unwrap();
+        let card_freq = cards.chars().fold([0_u8; 13], |mut freq, c| {
+            freq[Self::card_index(c)] += 1;
+            freq
+        });
+
+        Self {
+            raw: cards.to_owned(),
+            bid: bid.parse().unwrap(),
+            score: HandScore::new(&card_freq),
+        }
+    }
+
+    pub fn new_joker(line: &str) -> Self {
+        let (cards, bid) = line.split_once(' ').unwrap();
+        let card_freq = cards.chars().fold([0_u8; 13], |mut freq, c| {
+            freq[Self::card_index_joker(c)] += 1;
+            freq
+        });
+
+        Self {
+            raw: cards.to_owned(),
+            bid: bid.parse().unwrap(),
+            score: HandScore::new_joker(&card_freq),
+        }
+    }
+
+    fn compare(&self, other: &Self) -> Ordering {
+        match self.score.cmp(&other.score) {
+            Ordering::Equal => self
+                .raw
+                .chars()
+                .map(Self::card_index)
+                .zip(other.raw.chars().map(Self::card_index))
+                .map(|(s, o)| s.cmp(&o))
+                .find(|p| *p != Ordering::Equal)
+                .unwrap(),
+            ord => ord,
+        }
+    }
+
+    fn compare_joker(&self, other: &Self) -> Ordering {
+        match self.score.cmp(&other.score) {
+            Ordering::Equal => self
+                .raw
+                .chars()
+                .map(Self::card_index_joker)
+                .zip(other.raw.chars().map(Self::card_index_joker))
+                .map(|(s, o)| s.cmp(&o))
+                .find(|p| *p != Ordering::Equal)
+                .unwrap(),
+            ord => ord,
+        }
+    }
+}
+
+#[aoc_generator(day7, part1)]
+pub fn g13(input: &str) -> Vec<Hand> {
+    input.lines().map(Hand::new).collect()
+}
+
+#[aoc_generator(day7, part2)]
+pub fn g14(input: &str) -> Vec<Hand> {
+    input.lines().map(Hand::new_joker).collect()
+}
+
+#[aoc(day7, part1)]
+pub fn p13(input: &Vec<Hand>) -> u64 {
+    let mut input = input.to_vec();
+    input.sort_by(Hand::compare);
+    input
+        .iter()
+        .enumerate()
+        .map(|(inx, card)| card.bid * (inx as u64 + 1))
+        .sum()
+}
+
+#[aoc(day7, part2)]
+pub fn p14(input: &Vec<Hand>) -> u64 {
+    let mut input: Vec<Hand> = input.to_vec();
+    input.sort_by(Hand::compare_joker);
+    input
+        .iter()
+        .enumerate()
+        .map(|(inx, card)| card.bid * (inx as u64 + 1))
+        .sum()
+}
+
+#[aoc_generator(day9)]
+pub fn g15(input: &str) -> Vec<Vec<i64>> {
+    input
+        .lines()
+        .map(|line| {
+            line.split_whitespace()
+                .map(|word| word.parse().unwrap())
+                .collect()
+        })
+        .collect()
+}
+
+fn predict_next_value(history: &[i64]) -> i64 {
+    let mut last_values: Vec<i64> = Vec::new();
+    let mut history: Vec<i64> = history.to_owned();
+
+    let mut all_zero = false;
+    let mut last = history.len() - 1;
+
+    while !all_zero || last == 0 {
+        all_zero = true;
+        last_values.push(history[last]);
+        for index in 0..last {
+            history[index] =  history[index + 1] - history[index];
+            all_zero &= history[index] == 0;
+        }
+        last -= 1;
+    }
+    last_values.iter().sum()
+}
+
+pub fn predict_prev_value(history: &[i64]) -> i64 {
+    let mut last_values: Vec<i64> = Vec::new();
+    let mut history: Vec<i64> = history.to_owned();
+
+    let mut all_zero = false;
+    let mut last = history.len() - 1;
+
+    while !all_zero || last == 0 {
+        all_zero = true;
+        last_values.push(history[0]);
+        for index in 0..last {
+            history[index] =  history[index + 1] - history[index];
+            all_zero &= history[index] == 0;
+        }
+        last -= 1;
+    }
+    last_values.iter().rev().fold(0,|acc,el|*el - acc)
+}
+
+#[aoc(day9, part1)]
+pub fn p15(input: &[Vec<i64>]) -> i64 {
+    input.iter().map(|vec|predict_next_value(vec)).sum()
+}
+
+#[aoc(day9, part2)]
+pub fn p16(input: &[Vec<i64>]) -> i64 {
+    input.iter().map(|vec|predict_prev_value(vec)).sum()
 }
